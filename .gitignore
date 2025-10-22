@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Compiled TypeScript output
+dist/
+
+# Windows system file
+Thumbs.db
