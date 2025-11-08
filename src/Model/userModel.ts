@@ -22,17 +22,16 @@ const userSchema = new Schema<IUser>(
         },
         password: {
             type: String,
-            required: true,
-            unique: true
+            required: true
         }
     },
     { timestamps: true }
 )
 
-userSchema.pre('save', async function(next){
-    if(!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 12)
-    next();
+userSchema.pre('save', async function(){
+    if(!this.isModified('password')) return; this.password = await bcrypt.hash(this.password, 12)
 })
+
+
 
 export default mongoose.model<IUser>("User", userSchema);

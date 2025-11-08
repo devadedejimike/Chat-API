@@ -3,9 +3,9 @@ import User from '../Model/userModel'
 import jwt  from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export const signUp = async (req: Request, res: Response) => {
+    const JWT_SECRET = process.env.JWT_SECRET!;
     try {
         const {username, email, password} = req.body
         // Check if user already exist
@@ -26,15 +26,16 @@ export const signUp = async (req: Request, res: Response) => {
             message: "A new user account has been created"
         })
     } catch (error) {
+        console.log("SIGN UP ERROR=>", error)
         res.status(400).json({
             status: 'fail',
-            message: 'Error occured while creating a new user account', 
-            error: error
+            message: 'Error occured while creating a new user account',error
         })
     }
 }
 
 export const logIn = async (req: Request, res: Response) => {
+    const JWT_SECRET = process.env.JWT_SECRET!;
     try {
         const {username, password} = req.body;
         // Check for username
