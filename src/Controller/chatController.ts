@@ -4,6 +4,7 @@ import Chat from '../Model/chatModel';
 export const accessChat = async (req: Request, res: Response) => {
     try {
         const {userId} = req.body;
+        const currentUser = (req as any).user._id;
 
         // Check if user has an id
         if (!userId){
@@ -13,7 +14,7 @@ export const accessChat = async (req: Request, res: Response) => {
         // Check if chat already exist
         let chat = await Chat.findOne({
             isGroupChat: false,
-            users: {$all: [(req as any).user._id, userId]}
+            users: {$all: [currentUser, userId]}
         })
         .populate("users", "-password")
         .populate("latestMessage");
@@ -23,13 +24,13 @@ export const accessChat = async (req: Request, res: Response) => {
             return res.status(200).json(chat)
         }
         // To create a new chat
-        const newChat = Chat.create({
+        const newChat = await Chat.create({
             chatName: 'Direct Chat',
             isGroupChat: false,
-            users: [(req as any).user._id, userId]
+            users: [currentUser, userId]
         })
         // To populate the full chat
-        const fullChat = (await newChat).populate('users', '-password')
+        const fullChat = await Chat.findById(newChat._id).populate('users', '-password')
         res.status(201).json(fullChat)
     } catch (error) {
         res.status(400).json({message: 'Erroraccessing chat', error})

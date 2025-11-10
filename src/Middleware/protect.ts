@@ -8,13 +8,13 @@ interface DecodedToken {
   exp: number;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "mysecretkeyforauthapi";
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let token;
 
-    // 1) Check for Authorization header
+    // Check for Authorization header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -26,20 +26,20 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return res.status(401).json({ message: "Authorization failed. Token missing." });
     }
 
-    // 2) Verify token
+    // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
 
-    // 3) Find user based on decoded token id
+    // Find user based on decoded token id
     const currentUser = await User.findById(decoded.id);
 
     if (!currentUser) {
       return res.status(401).json({ message: "User no longer exists." });
     }
 
-    // 4) Attach user to request object
+    // Attach user to request object
     (req as any).user = currentUser;
 
-    next(); // 
+    next();
   } catch (error) {
     res.status(401).json({
       status: "fail",
