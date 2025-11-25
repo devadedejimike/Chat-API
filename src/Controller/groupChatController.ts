@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Chat from '../Model/chatModel';
-import User from '../Model/userModel';
+
 
 export const createGroup = async (req: Request, res: Response) => {
     try {

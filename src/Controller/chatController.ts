@@ -1,4 +1,4 @@
-import mongoose, {Request, Response} from 'express'
+import {Request, Response} from 'express'
 import Chat from '../Model/chatModel';
 
 export const accessChat = async (req: Request, res: Response) => {
@@ -34,5 +34,31 @@ export const accessChat = async (req: Request, res: Response) => {
         res.status(201).json(fullChat)
     } catch (error) {
         res.status(400).json({message: 'Erroraccessing chat', error})
+    }
+}
+
+export const getChat = async(req: Request, res: Response) => {
+    try {
+        //Get the logged-in user ID
+        const loggedInUser = (req as any).user._id
+        //Search for all chats where this user is inside the “users” array
+        const chats = await Chat.find({
+            users: {$elemMatch: {$eq: loggedInUser}}
+        })
+        //Populate user details
+        .populate("users", "username email")
+        .populate("groupAdmin", "username email")
+        //Sort chats by latest activity
+        .sort({updatedAt: -1})
+        //Respond with status and data
+        res.status(200).json({
+            status: 'success',
+            chats
+        })
+    } catch (error) {
+        res.status(404).json({
+            status: 'fail',
+            message: 'Could not fetch chat', error
+        })
     }
 }
