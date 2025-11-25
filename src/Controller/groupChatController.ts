@@ -79,3 +79,47 @@ export const addUser = async (req: Request, res: Response) => {
         })
     }
 }
+
+export const removeUser = async (req: Request, res: Response) => {
+    try {
+        const {chatId, userId} = req.body;
+        const loggedInUser = (req as any).user._id;
+
+        if(!chatId && !userId){
+            return res.status(404).json({message: 'chatId and userId required'})
+        }
+
+        // Check is chat exist
+        const chatExist = await Chat.findById(chatId);
+        if(!chatExist){
+            return res.status(404).json({message: 'Chat not found'})
+        }
+        // Check its a group chat
+        if(!chatExist.isGroupChat){
+            return res.status(400).json({message: 'Can only remove user from group'})
+        }
+        // Only admin can remove user
+        if(chatExist.groupAdmin.toString() != loggedInUser.toString()){
+            return res.status(400).json({message: 'Only group admin can remove user'})
+        }
+        // Remove user
+        chatExist.users = chatExist.users.filter(user => user.toString() != userId);
+        await chatExist.save();
+
+        const fullchat = await chatExist.populate([
+            {path: 'users', select: 'username email'},
+            {path: 'groupAdmin', select: 'username email'}
+        ]);
+
+        res.status(200).json({
+            status: 'success',
+            chat: fullchat,
+            message: 'User removed from group'
+        })
+    } catch (error) {
+       res.status(400).json({
+            status: 'fail',
+            message: 'Failed to remove user'
+        }) 
+    }
+}
