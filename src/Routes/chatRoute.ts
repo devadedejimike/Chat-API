@@ -7,8 +7,8 @@ const router = express.Router();
 router
     .post('/', protect, accessChat)
     .post('/group', protect, createGroup)
-    .post('/add', protect, addUser)
-    .post('/remove', protect, removeUser)
+    .post('/group/add', protect, addUser)
+    .post('/group/remove', protect, removeUser)
     .get('/', protect, getChat)
 
 export default router;
