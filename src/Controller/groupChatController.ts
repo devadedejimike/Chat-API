@@ -123,3 +123,52 @@ export const removeUser = async (req: Request, res: Response) => {
         }) 
     }
 }
+
+export const renameGroup = async (req: Request, res: Response) => {
+    try {
+        const {chatId, chatName} = req.body;
+        const loggedInUser = (req as any).users._id;
+
+        // check if chatName and chatId exist
+        if(!chatId && !chatName){
+            return res.status(404).json({message: 'chatId and chatName required'});
+        }
+
+        // check if chat exist
+        const chatExist = await Chat.findById(chatId);
+        if(!chatExist){
+            return res.status(404).json({message: 'Chat not found'})
+        }
+
+        // Check if is Group chat
+        if(chatExist.isGroupChat){
+            return res.status(400).json({message: 'Only group chat name can be changed'});
+        }
+
+        // Only group admin can change group name
+        if(chatExist.groupAdmin.toString() !== loggedInUser.toString()){
+            return res.status(400).json({message: 'Only group admin can change group name'});
+        }
+
+        // Rename the group chat
+        const newName = await Chat.findByIdAndUpdate(chatId, {chatName}, {new: true})
+        .populate([
+            {path: 'users', select: 'username email'},
+            {path: 'groupAdmin', select: 'username email'}
+        ])
+
+        if(!newName){
+            return res.status(404).json({message: 'Group chat not found'});
+        }
+        res.status(200).json({
+            status: 'success',
+            chat: newName,
+            message: 'Group Chat Name Updated'
+        })
+    } catch (error) {
+        res.status(400).json({
+            status: 'fail',
+            message: 'Error occured while changing group name', error
+        })
+    }
+}
