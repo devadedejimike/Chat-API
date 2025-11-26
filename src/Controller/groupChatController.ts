@@ -127,7 +127,7 @@ export const removeUser = async (req: Request, res: Response) => {
 export const renameGroup = async (req: Request, res: Response) => {
     try {
         const {chatId, chatName} = req.body;
-        const loggedInUser = (req as any).users._id;
+        const loggedInUser = (req as any).user._id;
 
         // check if chatName and chatId exist
         if(!chatId && !chatName){
@@ -141,7 +141,7 @@ export const renameGroup = async (req: Request, res: Response) => {
         }
 
         // Check if is Group chat
-        if(chatExist.isGroupChat){
+        if(!chatExist.isGroupChat){
             return res.status(400).json({message: 'Only group chat name can be changed'});
         }
 
@@ -168,7 +168,8 @@ export const renameGroup = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(400).json({
             status: 'fail',
-            message: 'Error occured while changing group name', error
+            message: 'Error occured while changing group name',
+            error
         })
     }
 }
