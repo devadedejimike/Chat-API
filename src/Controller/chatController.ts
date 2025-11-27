@@ -1,5 +1,6 @@
 import {Request, Response} from 'express'
 import Chat from '../Model/chatModel';
+import User from '../Model/userModel';
 
 export const accessChat = async (req: Request, res: Response) => {
     try {
@@ -60,5 +61,40 @@ export const getChat = async(req: Request, res: Response) => {
             status: 'fail',
             message: 'Could not fetch chat', error
         })
+    }
+}
+
+export const searchUser = async (req: Request, res: Response) => {
+    try {
+        const keyword = req.query.search as string
+        const loggedInUser = (req as any)._id
+
+        if(!keyword || keyword.trim() === ""){
+            return res.status(200).json([]);
+        }
+
+        const queryCondition = {
+            $or: [
+                {username: {$regex: keyword, $options: "i"}},
+                {email: {$regex: keyword, $options: "i"}}
+            ]
+        }
+
+        const user = await User.find(queryCondition)
+        .find({_id: {$ne: loggedInUser}})
+        .select('-password')
+
+        res.status(200).json({
+            status: 'success',
+            user,
+            meesage: 'User found'
+        });
+    } catch (error) {
+        res.status(404).json({
+            status: 'fail',
+            message: 'User not found',
+            error
+        })
+        console.log(error)
     }
 }
