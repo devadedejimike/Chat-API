@@ -59,3 +59,43 @@ export const fetchMessages = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch messages", error });
   }
 };
+
+export const deleteMessage = async (req: Request, res: Response) => {
+  try {
+    const sender = (req as any).user._id;
+    const {messageId} = req.body;
+
+    // check sender, chatId, text
+    if (!sender || !messageId){
+      return res.status(404).json({message: 'sender, chatId, text are required'})
+    } 
+
+    // check if message exists
+    const message = await Message.findById(messageId);
+    if(!message){
+      return res.status(404).json({message: 'Chat not found'})
+    }
+
+    // Only sender can delete message
+    if(message.sender.toString() !== sender.toString()){
+      return res.status(400).json({message: 'Only sender can delete message'})
+    }
+
+    // To delete message
+    const removeMessage = await Message.findByIdAndDelete(messageId)
+
+    res.status(200).json({
+      status: 'success',
+      removeMessage,
+      message: 'Message deleted successfully'
+    })
+
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Error deleting message',
+      error
+    })
+    console.log(error)
+  }
+}
