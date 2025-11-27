@@ -99,3 +99,43 @@ export const deleteMessage = async (req: Request, res: Response) => {
     console.log(error)
   }
 }
+
+export const searchMessage = async (req: Request, res: Response) => {
+  try {
+    const {chatId} = req.params;
+    const keyword = req.query.keyword as string;
+
+    // check chatId
+    if(!chatId){
+      return res.status(404).json({message: 'chatId is required'});
+    }
+
+    // return empty arry if keyword doens't exist
+    if(!keyword || keyword.trim() === ""){
+      return res.status(200).json([])
+    } 
+    // Check if Chat exists
+    const chatExist = await Chat.findById(chatId);
+    if(!chatExist){
+      return res.status(404).json({message: 'Chat not found'})
+    }
+
+    // Search Message 
+    const messages = await Message.find({
+      chat: chatId,
+      text: {$regex: keyword, $options: 'i'}
+    })
+    .populate('sender', 'username email')
+    .populate('receiver', 'username email')
+    .sort({createdAt: -1})
+
+    res.status(200).json({messages});
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'Failed to search message',
+      error
+    })
+    console.log(error)
+  }
+} 
