@@ -1,15 +1,34 @@
 import { Request, Response } from "express";
 import Message from "../Model/messageModel";
 import Chat from "../Model/chatModel";
+import cloudinary from "./cloudinary";
+
+interface MulterRequest extends Request{
+  file?: Express.Multer.File
+}
 
 // Send a message
-export const sendMessage = async (req: Request, res: Response) => {
+export const sendMessage = async (req: MulterRequest, res: Response) => {
   try {
     const { text, chatId, receiver } = req.body;
     const sender = (req as any).user._id;
 
-    if (!text || !chatId || !receiver) {
-      return res.status(400).json({ message: "Text, chatId, and receiver are required." });
+    let fileURL : string | null = null;
+
+    // To handle file upload
+    if(req.file){
+      const fileBuffer = req.file.buffer
+     fileURL = await new Promise((resolve, reject) => { 
+      const uploadedFile = cloudinary.uploader.upload_stream({folder: "chat_files"}, (error, result) => {
+        if(error) reject(error);
+        else resolve(result?.secure_url || null)
+      });
+      uploadedFile.end(fileBuffer);
+      });
+    }
+
+    if (!text && !fileURL) {
+      return res.status(400).json({ message: "Message cannot be empty." });
     }
     // Check if chat exist
     const chatExist = await Chat.findById(chatId);
@@ -19,9 +38,10 @@ export const sendMessage = async (req: Request, res: Response) => {
 
     const newMessage = await Message.create({
       sender,
-      text,
+      text: text || "",
       chat: chatId,
-      receiver
+      receiver,
+      attachments: fileURL ? [fileURL] : []
     });
 
     // Populate sender and chat details
