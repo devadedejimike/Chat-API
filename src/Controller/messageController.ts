@@ -62,23 +62,50 @@ export const fetchMessages = async (req: Request, res: Response) => {
 
 export const deleteMessage = async (req: Request, res: Response) => {
   try {
-    const sender = (req as any).user._id;
+    const userId = (req as any).user._id; 
     const {messageId} = req.body;
 
-    // check sender, chatId, text
-    if (!sender || !messageId){
-      return res.status(404).json({message: 'sender, chatId, text are required'})
+    // check userId, text
+    if (!userId || !messageId){
+      return res.status(404).json({message: 'userId, text are required'})
     } 
 
-    // check if message exists
-    const message = await Message.findById(messageId);
+    // check if message exists and fetch
+    const message = await Message.findById(messageId).populate('chat');
     if(!message){
+      return res.status(404).json({message: 'Message not found'})
+    }
+
+    const chat = message.chat as any;
+
+    if(!chat){
       return res.status(404).json({message: 'Chat not found'})
     }
 
-    // Only sender can delete message
-    if(message.sender.toString() !== sender.toString()){
-      return res.status(400).json({message: 'Only sender can delete message'})
+    let canDelete = false;
+
+    // Chek if Group Chat
+    if(chat.isGroupChat){
+      const fullChat = await Chat.findById(chat._id);
+      if(!fullChat){
+        return res.status(404).json({message: 'Chat not found'})
+      }
+
+      // Only group admin and sender can delete messages
+      if (
+        fullChat.groupAdmin.toString() === userId.toString() ||
+        message.sender.toString() === userId.toString()
+      ) {
+        canDelete = true;
+      }
+    }else {
+      // Only sender can delete in 1-on-1 chat
+      if (message.sender.toString() === userId.toString()) canDelete = true;
+    }
+
+    // Only sender or Group Admin can delete message
+    if(!canDelete){
+      return res.status(403).json({message: 'You are not allowed to delete this message'})
     }
 
     // To delete message
