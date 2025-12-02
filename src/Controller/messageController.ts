@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Message from "../Model/messageModel";
 import Chat from "../Model/chatModel";
 import cloudinary from "./cloudinary";
+import { io } from '../server';
 
 interface MulterRequest extends Request{
   file?: Express.Multer.File
@@ -53,6 +54,17 @@ export const sendMessage = async (req: MulterRequest, res: Response) => {
 
     // Update latest message in the chat
     await Chat.findByIdAndUpdate(chatId, { latestMessage: populatedMessage._id });
+
+    // Socket.IO broadcast
+    const chat = populatedMessage.chat as any
+
+    if(chat.users){
+      chat.users.forEach((user: any) =>{
+        if(user.toString() === sender.toString()) return;
+
+        io.to(user.toString()).emit('message received', populatedMessage)
+      })
+    }
 
     res.status(201).json(populatedMessage);
   } catch (error) {
