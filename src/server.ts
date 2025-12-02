@@ -8,7 +8,7 @@ const PORT = process.env.PORT||5000;
 const server = http.createServer(app);
 
 // Create Socket.IO Server
-const io = new Server(server, {
+export const io = new Server(server, {
     pingTimeout: 600000,
     cors: {
         origin: '*'
@@ -44,11 +44,6 @@ io.on('connection', (socket) => {
         })
     })
 })
-
-
-
-
-
 
 // Start Server
 server.listen(PORT, () =>{
