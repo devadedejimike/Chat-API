@@ -37,6 +37,11 @@ io.on('connection', (socket) => {
             socket.in(user.toString()).emit('message recieved', message);
         });
         // Show who is typing
+        socket.on('Typing', (chatId) => socket.in(chatId).emit('Typing'))
+
+        socket.on('Disconect', () => {
+            console.log('User Disconnected:', socket.id);
+        })
     })
 })
 
