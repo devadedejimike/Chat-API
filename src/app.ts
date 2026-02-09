@@ -7,11 +7,10 @@ import authRoute from './Routes/authRoute';
 import chatRoute from './Routes/chatRoute';
 import messageRoute from './Routes/messageRoute'
 
-
 connectDB(); 
 
 const app = express();
-app.use(cors())
+app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/chat', chatRoute);
