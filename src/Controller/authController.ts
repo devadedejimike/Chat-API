@@ -49,7 +49,7 @@ export const logIn = async (req: Request, res: Response) => {
         const checkPassword = await bcrypt.compare(password, user.password);
         if(!checkPassword){
             return res.status(400).json({
-                message: "Incorrect Username"
+                message: "Incorrect Password"
             })
         }
         const token = await jwt.sign({id: user._id}, JWT_SECRET, {expiresIn: '7d'})
