@@ -49,6 +49,13 @@ export const getChat = async(req: Request, res: Response) => {
         //Populate user details
         .populate("users", "username email")
         .populate("groupAdmin", "username email")
+        .populate({
+            path: "latestMessage",
+            populate: {
+                path: "sender",
+                select: "username email"
+            }
+        })
         //Sort chats by latest activity
         .sort({updatedAt: -1})
         //Respond with status and data
@@ -67,7 +74,7 @@ export const getChat = async(req: Request, res: Response) => {
 export const searchUser = async (req: Request, res: Response) => {
     try {
         const keyword = req.query.search as string
-        const loggedInUser = (req as any)._id
+        const loggedInUser = (req as any).user._id
 
         if(!keyword || keyword.trim() === ""){
             return res.status(200).json([]);
