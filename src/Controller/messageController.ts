@@ -11,7 +11,7 @@ interface MulterRequest extends Request{
 // Send a message
 export const sendMessage = async (req: MulterRequest, res: Response) => {
   try {
-    const { text, chatId, receiver } = req.body;
+    const { text, chatId } = req.body; //, receiver
     const sender = (req as any).user._id;
 
     let fileURL : string | null = null;
@@ -41,19 +41,35 @@ export const sendMessage = async (req: MulterRequest, res: Response) => {
       sender,
       text: text || "",
       chat: chatId,
-      receiver,
+      // receiver,
       attachments: fileURL ? [fileURL] : []
     });
 
     // Populate sender and chat details
     const populatedMessage = await newMessage.populate([
     { path: "sender", select: "username email" },
-    {path: "receiver", select: "username email"},
-    { path: "chat" },
+    { path: "chat", 
+      populate: {path: "users", select: "username email"}
+     },
     ]);
+    const updatedChat = await Chat.findByIdAndUpdate(
+      chatId,
+      {
+        latestMessage: populatedMessage._id,
+        updatedAt: new Date()
+      },
+      { new: true }
+    ).populate({
+        path: "latestMessage",
+        populate: {
+          path: "sender",
+          select: "username email"
+        }
+      });
 
-    // Update latest message in the chat
-    await Chat.findByIdAndUpdate(chatId, { latestMessage: populatedMessage._id });
+  // console.log("ChatId received:", chatId);
+  const updated = await Chat.findById(chatId);
+  // console.log("Updated chat:", updated);
 
     // Socket.IO broadcast
     const chat = populatedMessage.chat as any
@@ -66,7 +82,10 @@ export const sendMessage = async (req: MulterRequest, res: Response) => {
       })
     }
 
-    res.status(201).json(populatedMessage);
+    res.status(201).json({
+      message: populatedMessage,
+      chat: updatedChat
+    });
   } catch (error) {
     res.status(500).json({ message: "Failed to send message", error });
   }
