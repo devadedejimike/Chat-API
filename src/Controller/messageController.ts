@@ -76,9 +76,10 @@ export const sendMessage = async (req: MulterRequest, res: Response) => {
 
     if(chat.users){
       chat.users.forEach((user: any) =>{
-        if(user.toString() === sender.toString()) return;
+        const userId = user._id?.toString() || user.toString();
+        if(userId === sender.toString()) return;
 
-        io.to(user.toString()).emit('message received', populatedMessage)
+        io.to(userId).emit('message received', populatedMessage)
       })
     }
 
