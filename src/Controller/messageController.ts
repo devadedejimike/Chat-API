@@ -205,7 +205,6 @@ export const searchMessage = async (req: Request, res: Response) => {
       text: {$regex: keyword, $options: 'i'}
     })
     .populate('sender', 'username email')
-    .populate('receiver', 'username email')
     .sort({createdAt: -1})
 
     res.status(200).json({messages});
