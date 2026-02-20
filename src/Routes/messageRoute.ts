@@ -9,8 +9,8 @@ const router = express.Router();
 
 router
     .post('/send', protect, upload.single("file"), sendMessage as unknown as express.RequestHandler)
-    .get('/:chatId', protect, fetchMessages)
     .get('/search/:chatId', protect, searchMessage)
+    .get('/:chatId', protect, fetchMessages)
     .delete('/delete', protect, deleteMessage)
 
 
